@@ -137,36 +137,54 @@ end
 
 function M.get_node_at_cursor(winnr, ignore_injected_langs)
   winnr = winnr or 0
-  local cursor = vim.api.nvim_win_get_cursor(winnr)
-  local cursor_range = { cursor[1] - 1, cursor[2] }
-  local parsers = require "nvim-treesitter.parsers"
-
---   local ok, parser = pcall(vim.treesitter.get_parser, 0, lang_filetype)
-  local buf = vim.api.nvim_win_get_buf(winnr)
-  local root_lang_tree = parsers.get_parser(buf)
-  if not root_lang_tree then
-    return
-  end
-
-  local root ---@type TSNode|nil
-  if ignore_injected_langs then
-    for _, tree in pairs(root_lang_tree:trees()) do
-      local tree_root = tree:root()
-      if tree_root and ts.is_in_node_range(tree_root, cursor_range[1], cursor_range[2]) then
-        root = tree_root
-        break
-      end
+    local cursor = vim.api.nvim_win_get_cursor(0)
+    local cursor_range = { cursor[1] - 1, cursor[2] }
+    local buf = vim.api.nvim_get_current_buf()
+    local ok, parser = pcall(ts.get_parser, buf, "latex")
+    if not ok or not parser then
+        return
     end
-  else
-    root = M.get_root_for_position(cursor_range[1], cursor_range[2], root_lang_tree)
-  end
+    local root_tree = parser:parse()[1]
+    local root = root_tree and root_tree:root()
 
-  if not root then
-    return
-  end
+    if not root then
+        return
+    end
 
-  return root:named_descendant_for_range(cursor_range[1], cursor_range[2], cursor_range[1], cursor_range[2])
+    return root:named_descendant_for_range(cursor_range[1], cursor_range[2], cursor_range[1], cursor_range[2])
 end
+
+-- function M.get_node_at_cursor(winnr, ignore_injected_langs)
+--   winnr = winnr or 0
+--   local cursor = vim.api.nvim_win_get_cursor(winnr)
+--     local cursor_range = { cursor[1] - 1, cursor[2] }
+--   local parsers = require "nvim-treesitter.parsers"
+--
+-- --   local ok, parser = pcall(vim.treesitter.get_parser, 0, lang_filetype)
+--   local buf = vim.api.nvim_win_get_buf(winnr)
+--   local root_lang_tree = parsers.get_parser(buf)
+--   if not root_lang_tree then return
+--     end
+--
+--   local root ---@type TSNode|nil
+--   if ignore_injected_langs then
+--     for _, tree in pairs(root_lang_tree:trees()) do
+--       local tree_root = tree:root()
+--       if tree_root and ts.is_in_node_range(tree_root, cursor_range[1], cursor_range[2]) then
+--         root = tree_root
+--         break
+--       end
+--     end
+--   else
+--     root = M.get_root_for_position(cursor_range[1], cursor_range[2], root_lang_tree)
+--   end
+--
+--     if not root then
+--         return
+--     end
+--
+--     return root:named_descendant_for_range(cursor_range[1], cursor_range[2], cursor_range[1], cursor_range[2])
+-- end
 
 -- Returns list of nodes that is in between node on the cursor and the root node
 -- In following node tree, if the current node is "D" then the scope would
