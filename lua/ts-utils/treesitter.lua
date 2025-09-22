@@ -139,7 +139,8 @@ function M.get_node_at_cursor()
   local cursor = vim.api.nvim_win_get_cursor(0)
   local cursor_range = { cursor[1] - 1, cursor[2] }
   local buf = vim.api.nvim_get_current_buf()
-  local ok, parser = pcall(ts.get_parser, buf, 'latex')
+  local filetype = vim.api.nvim_get_option_value('filetype', { buf = buf })
+  local ok, parser = pcall(ts.get_parser, buf, filetype)
   if not ok or not parser then
     return
   end
