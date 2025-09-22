@@ -135,23 +135,27 @@ function M:get_curr_node()
   return M:get_node_at_cursor()
 end
 
-function M.get_node_at_cursor(winnr, ignore_injected_langs)
-  winnr = winnr or 0
-    local cursor = vim.api.nvim_win_get_cursor(0)
-    local cursor_range = { cursor[1] - 1, cursor[2] }
-    local buf = vim.api.nvim_get_current_buf()
-    local ok, parser = pcall(ts.get_parser, buf, "latex")
-    if not ok or not parser then
-        return
-    end
-    local root_tree = parser:parse()[1]
-    local root = root_tree and root_tree:root()
+function M.get_node_at_cursor()
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local cursor_range = { cursor[1] - 1, cursor[2] }
+  local buf = vim.api.nvim_get_current_buf()
+  local ok, parser = pcall(ts.get_parser, buf, 'latex')
+  if not ok or not parser then
+    return
+  end
+  local root_tree = parser:parse()[1]
+  local root = root_tree and root_tree:root()
 
-    if not root then
-        return
-    end
+  if not root then
+    return
+  end
 
-    return root:named_descendant_for_range(cursor_range[1], cursor_range[2], cursor_range[1], cursor_range[2])
+  return root:named_descendant_for_range(
+    cursor_range[1],
+    cursor_range[2],
+    cursor_range[1],
+    cursor_range[2]
+  )
 end
 
 -- function M.get_node_at_cursor(winnr, ignore_injected_langs)
